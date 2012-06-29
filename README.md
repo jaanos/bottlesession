@@ -4,9 +4,9 @@ bottlesession
 This project adds simple session management to Bottle Python.
 
 To use this, just add the following import statement to any bottle project:
-
+```python
 from bottlesession import session
-
+```
 
 To initialize a session just create a new session object.
 ```python
