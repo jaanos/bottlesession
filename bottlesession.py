@@ -19,9 +19,13 @@ class session:
             try:
                 #Load the session variables from file
                 self.sess = pickle.load("/sessions/"+sessionid+".ses")
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except:
                 #If the file doesn't exist, continue with a blank session.
                 pass
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             #If the file doesn't exist, continue with a blank session.
             pass
