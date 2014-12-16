@@ -6,8 +6,14 @@ import os
 
 SESSIONDIR = "sessions/"
 
+#Dictionary of volatile sessions
+sessions = {}
+
+#Should sessions be stored to files?
+store = True
+
 class session:
-    #Objects of this class will allow for easy session management in a bottle-py based, web app
+    #Objects of this class will allow for easy session management in a bottle.py based web app
     
     def __init__(self, secret_key="reallyinsecurepassword"):
         #Set the secret key to sign the cookies
@@ -15,40 +21,52 @@ class session:
         self.secret_key = secret_key
         self.sess = {}
         #Look for a session cookie
-        #If one exists, then open the corresponding session file. Otherwise, continue with a blank session.
+        #If one exists, then load the corresponding session data. Otherwise, continue with a blank session.
         try:
             self.sessionid = request.get_cookie("sessionid", secret=self.secret_key)
+            sid = str(self.sessionid)
             #Load the session variables from file
-            f = open(SESSIONDIR+str(self.sessionid)+".ses", "rb")
-            self.sess = pickle.load(f)
-            f.close()
+            if store:
+                f = open(SESSIONDIR+sid+".ses", "rb")
+                self.sess = pickle.load(f)
+                f.close()
+            else:
+                self.sess = sessions[sid]
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            #If the file doesn't exist, continue with a blank session.
+            #If the session doesn't exist, continue with a blank session.
             pass
     
-    def set(self, arg1, arg2):
-        self.sess[arg1] = arg2
+    def set(self, name, value):
+        self.sess[name] = value
     
-    def read(self, arg1):
-        return self.sess[arg1]
+    def read(self, name):
+        return self.sess[name]
     
     def close(self):
-        #save the session variables back to file
-        if not os.path.exists(SESSIONDIR):
-            os.makedirs(SESSIONDIR)
         if self.sessionid == None:
             #generate a new sessionid
-            ids = [x[len(SESSIONDIR):-4] for x in glob.glob(SESSIONDIR+"*.ses")]
+            if store:
+                ids = [x[len(SESSIONDIR):-4] for x in glob.glob(SESSIONDIR+"*.ses")]
+            else:
+                ids = sessions.keys()
             while True:
                 self.sessionid = '%08x' % random.randrange(1 << 32)
                 if self.sessionid not in ids:
                     break
-        path = SESSIONDIR+str(self.sessionid)+".ses"
-        f = open(path,"wb")
-        pickle.dump(self.sess, f)
-        f.close()
+            sid = self.sessionid
+        else:
+            sid = str(self.sessionid)
+        if store:
+            #save the session variables back to file
+            if not os.path.exists(SESSIONDIR):
+                os.makedirs(SESSIONDIR)
+            path = SESSIONDIR+sid+".ses"
+            f = open(path,"wb")
+            pickle.dump(self.sess, f)
+            f.close()
+        else:
+            sessions[sid] = self.sess
         #set the sessionid in the user cookie
         response.set_cookie("sessionid", self.sessionid, secret=self.secret_key)
-        
