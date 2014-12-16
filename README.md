@@ -31,4 +31,10 @@ When you're done, make sure you close the session so that the variables get writ
 sess.close()
 ```
 
-When the user returns to your site, their session will be reloaded as soon as you initialize the 'session' object.
+When the user returns to your site, their session will be reloaded as soon as you initialize the `session` object.
+
+If you do not wish to store sessions to disk (i.e., they will only exist as long as Bottle is running), you may change this setting.
+```python
+from bottlesession import sessionSettings
+sessionsettings["store"] = False
+```
