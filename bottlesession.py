@@ -4,13 +4,12 @@ import pickle
 import random
 import os
 
-SESSIONDIR = "sessions/"
+sessionSettings = {"sessiondir": "sessions/",
+                   "extension": ".ses",
+                   "store": True}
 
 #Dictionary of volatile sessions
 sessions = {}
-
-#Should sessions be stored to files?
-store = True
 
 class session:
     #Objects of this class will allow for easy session management in a bottle.py based web app
@@ -26,8 +25,8 @@ class session:
             self.sessionid = request.get_cookie("sessionid", secret=self.secret_key)
             sid = str(self.sessionid)
             #Load the session variables from file
-            if store:
-                f = open(SESSIONDIR+sid+".ses", "rb")
+            if sessionSettings["store"]:
+                f = open(sessionSettings["sessiondir"]+sid+sessionSettings["extension"], "rb")
                 self.sess = pickle.load(f)
                 f.close()
             else:
@@ -47,8 +46,8 @@ class session:
     def close(self):
         if self.sessionid == None:
             #generate a new sessionid
-            if store:
-                ids = [x[len(SESSIONDIR):-4] for x in glob.glob(SESSIONDIR+"*.ses")]
+            if sessionSettings["store"]:
+                ids = [x[len(sessionSettings["sessiondir"]):-len(sessionSettings["extension"])] for x in glob.glob(sessionSettings["sessiondir"]+"*"+sessionSettings["extension"])]
             else:
                 ids = sessions.keys()
             while True:
@@ -58,11 +57,11 @@ class session:
             sid = self.sessionid
         else:
             sid = str(self.sessionid)
-        if store:
+        if sessionSettings["store"]:
             #save the session variables back to file
-            if not os.path.exists(SESSIONDIR):
-                os.makedirs(SESSIONDIR)
-            path = SESSIONDIR+sid+".ses"
+            if not os.path.exists(sessionSettings["sessiondir"]):
+                os.makedirs(sessionSettings["sessiondir"])
+            path = sessionSettings["sessiondir"]+sid+sessionSettings["extension"]
             f = open(path,"wb")
             pickle.dump(self.sess, f)
             f.close()
